@@ -40,4 +40,55 @@ app.get("/employees", async (req, res) => {
   }
 });
 
+// Get Employee by ID
+app.get("/employees/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query("SELECT * FROM employees WHERE id = $1", [
+      id,
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err.message);
+  }
+});
+
+// Delete Employee
+app.delete("/employees/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM employees WHERE id = $1 RETURNING *",
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Employee deleted successfully",
+      employee: result.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err.message);
+  }
+});
+
 module.exports = app;
